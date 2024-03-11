@@ -1,37 +1,95 @@
 import argparse
-from sqlalchemy import create_engine, MetaData
+from sqlalchemy import create_engine, MetaData, Table
 from sqlalchemy.orm import sessionmaker
 from models import *
 import pandas as pd
 
-def insert_from_csv(csv_file_path, session, chunksize=1000):
-    # Iterate over the CSV file in chunks
+def find_and_remove_nan(chunk, column_names):
+    new_chunk = []
+    corrupted_chunk = []
+    for row in chunk:
+        if any(pd.isna(row[column_name]) for column_name in column_names):
+            corrupted_chunk.append(row)
+        else:
+            new_chunk.append(row)
+    return new_chunk, corrupted_chunk
+
+def find_and_remove_corrupted_rows(chunk, column_name, bad_references):
+    new_chunk = []
+    removed_chunk = []
+    for row in chunk:
+        if row[column_name] in map(lambda x: x[column_name], bad_references):
+            removed_chunk.append(row)
+        else:
+            new_chunk.append(row)
+    return new_chunk, removed_chunk
+
+def remove_duplicates(chunk, column_name, visited):
+    return [row for row in chunk if row[column_name] not in visited]
+    
+def insert_from_csv(csv_file_path, engine, chunksize=10000): 
+    metadata = MetaData()
+    metadata.reflect(bind=engine)
+    connection = engine.connect()
+
+    # Assuming the tables are already defined and match CSV structure
+    user_table = Table('Users', metadata, autoload_with=engine)
+    category_table = Table('Categories', metadata, autoload_with=engine)
+    product_table = Table('Products', metadata, autoload_with=engine)
+    event_table = Table('Events', metadata, autoload_with=engine)
+    visited_users = set()
+    visited_categories = set()
+    visited_products = set()
+
     for chunk in pd.read_csv(csv_file_path, chunksize=chunksize):
-        for index, row in chunk.iterrows():
-            if row.isnull().any():
-                print(f"Skipping row {index} due to NaN values: {[col for col, value in row.items() if pd.isnull(value)]}")
-                continue
+        # Preprocess chunk if necessary (e.g., drop NaN, convert datetimes)
+        chunk['event_time'] = pd.to_datetime(chunk['event_time'], format='%Y-%m-%d %H:%M:%S %Z')
+        
+        # Convert DataFrame to list of dictionaries for bulk insert
+        users = chunk[['user_id']].drop_duplicates().to_dict('records')
+        users, corrupted_users = find_and_remove_nan(users, ['user_id'])
+        users = remove_duplicates(users, "user_id", visited_users)
+
+        categories = chunk[['category_id', 'category_code']].drop_duplicates().to_dict('records')
+        categories, corrupted_categories = find_and_remove_nan(categories, ['category_id', 'category_code'])
+        categories = remove_duplicates(categories, "category_id", visited_categories)
+
+        products = chunk[['product_id', 'category_id', 'brand', 'price']].drop_duplicates().to_dict('records')
+        products, corrupted_products = find_and_remove_nan(products, ['product_id', 'category_id', 'brand', 'price'])
+        products, removed_products = find_and_remove_corrupted_rows(products, 'category_id', corrupted_categories)
+        corrupted_products.extend(removed_products)
+        products = remove_duplicates(products, "product_id", visited_products)
+
+        events = chunk[['event_time', 'event_type', 'product_id', 'user_id', 'user_session']].to_dict('records')
+        events, corrupted_events = find_and_remove_nan(events, ['event_time', 'event_type', 'product_id', 'user_id', 'user_session'])
+        events, removed_events = find_and_remove_corrupted_rows(events, 'product_id', corrupted_products)
+        corrupted_events.extend(removed_events)
+        events, removed_events = find_and_remove_corrupted_rows(events, 'user_id', corrupted_users)
+        corrupted_events.extend(removed_events)
+
+        try:
+            # Perform bulk insert
+            connection.execute(user_table.insert(), users)
+            connection.execute(category_table.insert(), categories)
+            connection.execute(product_table.insert(), products)
+            connection.execute(event_table.insert(), events)
+            connection.commit()
+            for user in users:
+                visited_users.add(user["user_id"])
+            for category in categories:
+                visited_categories.add(category["category_id"])
+            for product in products:
+                visited_products.add(product["product_id"])
             
-            user = User(user_id=row['user_id'])
-            session.merge(user)
+        except Exception as e:
+            print(f"Error inserting data: {e}")
+            connection.rollback()  # Roll back the transaction on error
+            continue
 
-            category = Category(category_id=row['category_id'], category_code=row['category_code'])  # Adjust as necessary
-            session.merge(category)
-
-            product = Product(product_id=row['product_id'], category_id=row['category_id'], brand=row['brand'], price=row['price'])
-            session.merge(product)
-
-            event_date = pd.to_datetime(row['event_time'], errors='coerce', format='%Y-%m-%d %H:%M:%S %Z')
-            event = Event(event_time=event_date, event_type=row['event_type'], product_id=row['product_id'], user_id=row['user_id'], user_session=row['user_session'])
-            session.merge(event)
-
-            print(f"Inserted row {index} into database.")
-
-        print("Committing the current chunk.")
-        session.commit()  # Commit after each chunk is processed
+        print(f"Inserted chunk of size {chunksize} into database.")
 
     print("All data committed.")
-
+    connection.close()
 
 
 # Setup argparse for script options
@@ -62,5 +120,5 @@ if args.create:
 
 if args.insert_csv:
     print(f"Inserting data from CSV file: {args.insert_csv}")
-    insert_from_csv(args.insert_csv, session)
-    print("Data inserted.") 
+    insert_from_csv(args.insert_csv, engine)
+    print("Data inserted.")
