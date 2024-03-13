@@ -3,36 +3,12 @@ from sqlalchemy import create_engine, MetaData, Table, select
 from sqlalchemy.orm import sessionmaker
 from models import *
 import pandas as pd
-
-def find_and_remove_nan(chunk, column_names):
-    new_chunk = []
-    corrupted_chunk = []
-    for row in chunk:
-        if any(pd.isna(row[column_name]) for column_name in column_names):
-            corrupted_chunk.append(row)
-        else:
-            new_chunk.append(row)
-    return new_chunk, corrupted_chunk
-
-def find_and_remove_corrupted_rows(chunk, column_name, bad_references):
-    new_chunk = []
-    removed_chunk = []
-    for row in chunk:
-        if row[column_name] in map(lambda x: x[column_name], bad_references):
-            removed_chunk.append(row)
-        else:
-            new_chunk.append(row)
-    return new_chunk, removed_chunk
-
-def remove_duplicates(chunk, column_name, visited):
-    return [row for row in chunk if row[column_name] not in visited]
     
 def insert_users_and_categories(csv_file_path, engine, chunksize=100000): 
     metadata = MetaData()
     metadata.reflect(bind=engine)
     connection = engine.connect()
 
-    # Assuming the tables are already defined and match CSV structure
     user_table = Table('Users', metadata, autoload_with=engine)
     category_table = Table('Categories', metadata, autoload_with=engine)
     product_table = Table('Products', metadata, autoload_with=engine)
@@ -42,24 +18,19 @@ def insert_users_and_categories(csv_file_path, engine, chunksize=100000):
     visited_products = set()
 
     for chunk in pd.read_csv(csv_file_path, chunksize=chunksize):
-        # Preprocess chunk if necessary (e.g., drop NaN, convert datetimes)
-        chunk['event_time'] = pd.to_datetime(chunk['event_time'], format='%Y-%m-%d %H:%M:%S %Z')
-        
-        # Convert DataFrame to list of dictionaries for bulk insert
+        # Dropping rows with duplicate user_id
         users = chunk[['user_id']].drop_duplicates()
+        # Removing users that have already been added to the database
         users = users[~users['user_id'].isin(visited_users)]
+        # Dropping rows where user_id is nan, and converting the remaining rows to dictionries
         users = users.dropna(subset=['user_id']).to_dict('records')
 
+        # Dropping rows with duplicate category_id
         categories = chunk[['category_id', 'category_code']].drop_duplicates(subset=['category_id'])
+        # Dropping categories that have already been added to the database
         categories = categories[~categories['category_id'].isin(visited_categories)]
+        # Dropping rows where category_id or category_code is nan, and converting the remaining rows to dictionries
         categories = categories.dropna(subset=['category_id', 'category_code']).to_dict('records')
-
-       #events = chunk[['event_time', 'event_type', 'product_id', 'user_id', 'user_session']].to_dict('records')
-       #events, corrupted_events = find_and_remove_nan(events, ['event_time', 'event_type', 'product_id', 'user_id', 'user_session'])
-       #events, removed_events = find_and_remove_corrupted_rows(events, 'product_id', corrupted_products)
-       #corrupted_events.extend(removed_events)
-       #events, removed_events = find_and_remove_corrupted_rows(events, 'user_id', corrupted_users)
-       #corrupted_events.extend(removed_events)
 
         try:
             # Perform bulk insert
@@ -97,16 +68,19 @@ def insert_products(csv_file_path, engine, chunksize=100000):
     visited_products = set()
 
     for chunk in pd.read_csv(csv_file_path, chunksize=chunksize):
-
-        # Convert DataFrame to list of dictionaries for bulk insert
+        # Drop rows with duplicate product_id
         products = chunk[['product_id', 'category_id', 'brand', 'price']].drop_duplicates(subset=['product_id'])
+        # Remove products that have already been added to the database
         products = products[~products['product_id'].isin(visited_products)]
+        # Drop rows that contain nan in either of the below attributes
         products = products.dropna(subset=['product_id', 'category_id', 'brand', 'price']).to_dict('records')
+
         # Find all the unique categories in the chunk
         categories_exist = {product['category_id']: False for product in products}
         for category_id in categories_exist:
             categories_exist[category_id] = connection.execute(select(Category).where(Category.category_id == category_id)).rowcount > 0
 
+        # Remove products with a category that doesn't exsist
         products = [product for product in products if categories_exist[product['category_id']]]
 
         try:
@@ -134,13 +108,14 @@ def insert_events(csv_file_path, engine, chunksize=100000):
     connection = engine.connect()
 
     event_table = Table('Events', metadata, autoload_with=engine)
+    # Create a set with all the products in the database
     visited_products = connection.execute(select(Product.product_id).distinct())
     visited_products = set([product[0] for product in visited_products])
 
     for chunk in pd.read_csv(csv_file_path, chunksize=chunksize):
         chunk['event_time'] = pd.to_datetime(chunk['event_time'], format='%Y-%m-%d %H:%M:%S %Z')
 
-        # Convert DataFrame to list of dictionaries for bulk insert
+        # Extract valid rows/events
         events = chunk[['event_time', 'event_type', 'product_id', 'user_id', 'user_session']]
         events = events.dropna(subset=['event_time', 'event_type', 'product_id', 'user_id', 'user_session']).to_dict('records')
 
@@ -148,6 +123,8 @@ def insert_events(csv_file_path, engine, chunksize=100000):
 
         for product_id in product_exist:
             product_exist[product_id] = str(product_id) in visited_products
+        
+        # Drop events with a product that doesn't exist in the database
         events = [event for event in events if product_exist[event['product_id']]]
 
         try:
@@ -181,7 +158,7 @@ args = parser.parse_args()
 # Database connection and session creation
 USER = 'user'
 PASSWORD = 'Password123'
-HOST = '192.168.2.101'
+HOST = 'localhost'
 DBNAME = 'mysqldb'
 engine = create_engine(f'mysql+mysqlconnector://{USER}:{PASSWORD}@{HOST}/{DBNAME}')
 Session = sessionmaker(bind=engine)
@@ -198,13 +175,16 @@ if args.create:
     print("All tables created.")
 
 if args.insert_users_and_categories:
-    print(f"Inserting data from CSV file: {args.csv_path}")
+    print(f"Inserting users and categories from CSV file: {args.csv_path}")
     insert_users_and_categories(args.csv_path, engine)
     print("Data inserted.")
 
 if args.insert_products:
-    print(f"Inserting data from CSV file: {args.csv_path}")
+    print(f"Inserting products from CSV file: {args.csv_path}")
     insert_products(args.csv_path, engine)
     print("Data inserted.")
 
-insert_events(args.csv_path, engine)
+if args.insert_events:
+    print(f"Inserting events from CSV file: {args.csv_path}")
+    insert_events(args.csv_path, engine)
+    print("Data inserted.")
