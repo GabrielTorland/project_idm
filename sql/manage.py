@@ -134,21 +134,27 @@ def insert_events(csv_file_path, engine, chunksize=100000):
     connection = engine.connect()
 
     event_table = Table('Events', metadata, autoload_with=engine)
+    visited_products = connection.execute(select(Product.product_id).distinct())
+    visited_products = set([product[0] for product in visited_products])
 
     for chunk in pd.read_csv(csv_file_path, chunksize=chunksize):
         chunk['event_time'] = pd.to_datetime(chunk['event_time'], format='%Y-%m-%d %H:%M:%S %Z')
 
         # Convert DataFrame to list of dictionaries for bulk insert
-        events = chunk[['event_time', 'event_type', 'product_id', 'user_id', 'user_session']].to_dict('records')
-        product_ids = set()
+        events = chunk[['event_time', 'event_type', 'product_id', 'user_id', 'user_session']]
+        events = events.dropna(subset=['event_time', 'event_type', 'product_id', 'user_id', 'user_session']).to_dict('records')
+
+        product_exist = {event['product_id']: False for event in events}
+
+        for product_id in product_exist:
+            product_exist[product_id] = str(product_id) in visited_products
+        events = [event for event in events if product_exist[event['product_id']]]
 
         try:
             # Perform bulk insert
             if len(events) > 0:
                 connection.execute(event_table.insert(), events)
                 connection.commit()
-                for event in events:
-                    visited_events.add(event["event_id"])
             else:
                 continue
             
@@ -175,7 +181,7 @@ args = parser.parse_args()
 # Database connection and session creation
 USER = 'user'
 PASSWORD = 'Password123'
-HOST = '25.49.45.229'
+HOST = '192.168.2.101'
 DBNAME = 'mysqldb'
 engine = create_engine(f'mysql+mysqlconnector://{USER}:{PASSWORD}@{HOST}/{DBNAME}')
 Session = sessionmaker(bind=engine)
@@ -201,5 +207,4 @@ if args.insert_products:
     insert_products(args.csv_path, engine)
     print("Data inserted.")
 
-if args.insert_events:
-    pass
+insert_events(args.csv_path, engine)
