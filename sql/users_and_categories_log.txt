@@ -1,0 +1,8 @@
+2024-03-17T14:37:14+00:00: Starting --insert_users_and_categories
+Running --insert_users_and_categories...
+2024-03-17T14:37:17+00:00: Inserting users and categories from CSV file: 2019-Nov.csv
+2024-03-17T14:50:03+00:00: Inserted chunk of size 3696392 into database.
+2024-03-17T14:50:03+00:00: All data committed.
+2024-03-17T14:50:10+00:00: Data inserted.
+2024-03-17T14:50:11+00:00: Finished --insert_users_and_categories
+Time taken for --insert_users_and_categories: 777 seconds

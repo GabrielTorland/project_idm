@@ -1,21 +1,19 @@
 import argparse
+import multiprocessing
 from sqlalchemy import create_engine, MetaData, Table, select
 from sqlalchemy.orm import sessionmaker
 from models import *
 import pandas as pd
     
-def insert_users_and_categories(csv_file_path, engine, chunksize=100000): 
+def insert_users_and_categories(csv_file_path, engine, chunksize=80000000): 
     metadata = MetaData()
     metadata.reflect(bind=engine)
     connection = engine.connect()
 
     user_table = Table('Users', metadata, autoload_with=engine)
     category_table = Table('Categories', metadata, autoload_with=engine)
-    product_table = Table('Products', metadata, autoload_with=engine)
-    event_table = Table('Events', metadata, autoload_with=engine)
     visited_users = set()
     visited_categories = set()
-    visited_products = set()
 
     for chunk in pd.read_csv(csv_file_path, chunksize=chunksize):
         # Dropping rows with duplicate user_id
@@ -23,14 +21,14 @@ def insert_users_and_categories(csv_file_path, engine, chunksize=100000):
         # Removing users that have already been added to the database
         users = users[~users['user_id'].isin(visited_users)]
         # Dropping rows where user_id is nan, and converting the remaining rows to dictionries
-        users = users.dropna(subset=['user_id']).to_dict('records')
+        users = users.dropna().to_dict('records')
 
         # Dropping rows with duplicate category_id
         categories = chunk[['category_id', 'category_code']].drop_duplicates(subset=['category_id'])
         # Dropping categories that have already been added to the database
         categories = categories[~categories['category_id'].isin(visited_categories)]
         # Dropping rows where category_id or category_code is nan, and converting the remaining rows to dictionries
-        categories = categories.dropna(subset=['category_id', 'category_code']).to_dict('records')
+        categories = categories.dropna().to_dict('records')
 
         try:
             # Perform bulk insert
@@ -66,22 +64,21 @@ def insert_products(csv_file_path, engine, chunksize=100000):
 
     product_table = Table('Products', metadata, autoload_with=engine)
     visited_products = set()
+    visited_categories = connection.execute(select(Category.category_id).distinct())
+    visited_categories = set([int(category[0]) for category in visited_categories])
 
     for chunk in pd.read_csv(csv_file_path, chunksize=chunksize):
         # Drop rows with duplicate product_id
         products = chunk[['product_id', 'category_id', 'brand', 'price']].drop_duplicates(subset=['product_id'])
+
         # Remove products that have already been added to the database
         products = products[~products['product_id'].isin(visited_products)]
+
+        # Drop products with categories that doesn't exist
+        products = products[products['category_id'].isin(visited_categories)]
+
         # Drop rows that contain nan in either of the below attributes
-        products = products.dropna(subset=['product_id', 'category_id', 'brand', 'price']).to_dict('records')
-
-        # Find all the unique categories in the chunk
-        categories_exist = {product['category_id']: False for product in products}
-        for category_id in categories_exist:
-            categories_exist[category_id] = connection.execute(select(Category).where(Category.category_id == category_id)).rowcount > 0
-
-        # Remove products with a category that doesn't exsist
-        products = [product for product in products if categories_exist[product['category_id']]]
+        products = products.dropna().to_dict('records')
 
         try:
             # Perform bulk insert
@@ -101,7 +98,6 @@ def insert_products(csv_file_path, engine, chunksize=100000):
         print(f"Inserted chunk of size {len(products)} into database.")
 
     connection.close()
-
 def insert_events(csv_file_path, engine, chunksize=100000): 
     metadata = MetaData()
     metadata.reflect(bind=engine)
@@ -110,22 +106,16 @@ def insert_events(csv_file_path, engine, chunksize=100000):
     event_table = Table('Events', metadata, autoload_with=engine)
     # Create a set with all the products in the database
     visited_products = connection.execute(select(Product.product_id).distinct())
-    visited_products = set([product[0] for product in visited_products])
+    visited_products = set([int(product[0]) for product in visited_products])
 
     for chunk in pd.read_csv(csv_file_path, chunksize=chunksize):
         chunk['event_time'] = pd.to_datetime(chunk['event_time'], format='%Y-%m-%d %H:%M:%S %Z')
 
         # Extract valid rows/events
         events = chunk[['event_time', 'event_type', 'product_id', 'user_id', 'user_session']]
-        events = events.dropna(subset=['event_time', 'event_type', 'product_id', 'user_id', 'user_session']).to_dict('records')
-
-        product_exist = {event['product_id']: False for event in events}
-
-        for product_id in product_exist:
-            product_exist[product_id] = str(product_id) in visited_products
-        
         # Drop events with a product that doesn't exist in the database
-        events = [event for event in events if product_exist[event['product_id']]]
+        events = events[events["product_id"].isin(visited_products)]        
+        events = events.dropna().to_dict('records')
 
         try:
             # Perform bulk insert
@@ -143,7 +133,6 @@ def insert_events(csv_file_path, engine, chunksize=100000):
         print(f"Inserted chunk of size {len(events)} into database.")
 
     connection.close()
-
 
 # Setup argparse for script options
 parser = argparse.ArgumentParser(description='Manage database schema operations.')

@@ -177,3 +177,4 @@ pyrightconfig.json
 
 *.csv
 log.txt
+.idea
