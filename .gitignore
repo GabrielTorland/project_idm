@@ -124,7 +124,6 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env
 .venv
 env/
 venv/
@@ -178,3 +177,7 @@ pyrightconfig.json
 *.csv
 log.txt
 .idea
+
+mysql_data/
+all-databases.sql
+all-databases.zip
