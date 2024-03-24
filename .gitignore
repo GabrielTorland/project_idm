@@ -181,3 +181,4 @@ log.txt
 mysql_data/
 all-databases.sql
 all-databases.zip
+mongodata
