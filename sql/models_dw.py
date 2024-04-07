@@ -6,7 +6,7 @@ Base = declarative_base()
 
 class DimUsers(Base):
     tablename = 'DimUsers'
-    userid = Column(String(9), primarykey=True)
+    user_id = Column(String(9), primarykey=True)
 
 class DimCategories(Base):
     tablename = 'DimCategories'
