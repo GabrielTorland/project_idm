@@ -81,7 +81,7 @@ def sync_product_dim(batch_size):
     
     print(f"Synced {products_synced} products from Products to DimProducts")
 
-def sync_fact():
+def sync_fact(batch_size):
     events_table_odb = Table('Events', metadata_odb, autoload_with=odb_engine)
     products_table_odb = Table('Products', metadata_odb, autoload_with=odb_engine)
     fact_table_dw = Table('FactSales', dw_metadata, autoload_with=dw_engine)
@@ -129,8 +129,12 @@ def sync_fact():
         } for row in sales_data
     ]
 
-    dw_connection.execute(fact_table_dw.insert(), sales_data)
-    dw_connection.commit()
+    for i in range(0, len(sales_data), batch_size):
+        batch = sales_data[i:i+batch_size]
+        dw_connection.execute(fact_table_dw.insert(), batch)
+        dw_connection.commit()
+
+    print(f"Synced {len(sales_data)} sales from Events to FactSales")
 
     print(f"Synced {len(sales_data)} sales from Events to FactSales")
 
@@ -139,6 +143,6 @@ def sync_fact():
 if __name__ == '__main__':
     sync_category_dim(batch_size=100000)
     sync_product_dim(batch_size=100000)
-    sync_fact()
+    sync_fact(1000)
     odb_connection.close()
     dw_connection.close()
