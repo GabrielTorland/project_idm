@@ -4,23 +4,23 @@ from sqlalchemy.orm import relationship
 
 Base = declarative_base()
 
-class User(Base):
-    tablename = 'Users'
+class DimUsers(Base):
+    tablename = 'DimUsers'
     userid = Column(String(9), primarykey=True)
 
-class Category(Base):
-    tablename = 'Categories'
+class DimCategory(Base):
+    tablename = 'DimCategory'
     category_id = Column(String(19), primary_key=True)
     category_code = Column(String(38), default=None)
 
-class Product(Base):
-    __tablename = 'Products'
+class DimProduct(Base):
+    __tablename = 'DimProduct'
     product_id = Column(String(9), primary_key=True)
     brand = Column(String(28), default=None)
     price = Column(DECIMAL(10, 2))
 
-class Fact(Base):
-    __tablename = 'Events'
+class FactSales(Base):
+    __tablename = 'FactSales'
     fact_id = Column(BigInteger, primary_key=True, autoincrement=True)
     date = Column(Date)
     unit_price = Column(DECIMAL(10, 2))
