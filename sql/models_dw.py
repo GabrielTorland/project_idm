@@ -5,29 +5,29 @@ from sqlalchemy.orm import relationship
 Base = declarative_base()
 
 class DimUsers(Base):
-    tablename = 'DimUsers'
-    user_id = Column(String(9), primarykey=True)
+    __tablename__ = 'DimUsers'  
+    user_id = Column(String(9), primary_key=True)  
 
 class DimCategories(Base):
-    tablename = 'DimCategories'
+    __tablename__ = 'DimCategories' 
     category_id = Column(String(19), primary_key=True)
     category_code = Column(String(38), default=None)
 
 class DimProducts(Base):
-    __tablename = 'DimProducts'
+    __tablename__ = 'DimProducts' 
     product_id = Column(String(9), primary_key=True)
     brand = Column(String(28), default=None)
     price = Column(DECIMAL(10, 2))
 
 class FactSales(Base):
-    __tablename = 'FactSales'
+    __tablename__ = 'FactSales' 
     fact_id = Column(BigInteger, primary_key=True, autoincrement=True)
     date = Column(Date)
     unit_price = Column(DECIMAL(10, 2))
     quantity = Column(BigInteger)
-    product_id = Column(String(9), ForeignKey('Products.product_id'))
-    category_id = Column(String(9), ForeignKey('Category.category_id'))
-    user_id = Column(String(9), ForeignKey('Users.user_id'))
-    product = relationship("Product")
-    category = relationship("Category")
-    user = relationship("User")
+    product_id = Column(String(9), ForeignKey('DimProducts.product_id'))  
+    category_id = Column(String(19), ForeignKey('DimCategories.category_id'))  
+    user_id = Column(String(9), ForeignKey('DimUsers.user_id'))  
+    product = relationship("DimProducts") 
+    category = relationship("DimCategories") 
+    user = relationship("DimUsers")  
