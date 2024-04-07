@@ -8,13 +8,13 @@ class DimUsers(Base):
     tablename = 'DimUsers'
     userid = Column(String(9), primarykey=True)
 
-class DimCategory(Base):
-    tablename = 'DimCategory'
+class DimCategories(Base):
+    tablename = 'DimCategories'
     category_id = Column(String(19), primary_key=True)
     category_code = Column(String(38), default=None)
 
-class DimProduct(Base):
-    __tablename = 'DimProduct'
+class DimProducts(Base):
+    __tablename = 'DimProducts'
     product_id = Column(String(9), primary_key=True)
     brand = Column(String(28), default=None)
     price = Column(DECIMAL(10, 2))
