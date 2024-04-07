@@ -4,10 +4,6 @@ from sqlalchemy.orm import relationship
 
 Base = declarative_base()
 
-class DimUsers(Base):
-    __tablename__ = 'DimUsers'  
-    user_id = Column(String(9), primary_key=True)  
-
 class DimCategories(Base):
     __tablename__ = 'DimCategories' 
     category_id = Column(String(19), primary_key=True)
@@ -25,9 +21,8 @@ class FactSales(Base):
     date = Column(Date)
     unit_price = Column(DECIMAL(10, 2))
     quantity = Column(BigInteger)
+    unique_customers = Column(BigInteger)
     product_id = Column(String(9), ForeignKey('DimProducts.product_id'))  
     category_id = Column(String(19), ForeignKey('DimCategories.category_id'))  
-    user_id = Column(String(9), ForeignKey('DimUsers.user_id'))  
     product = relationship("DimProducts") 
     category = relationship("DimCategories") 
-    user = relationship("DimUsers")  
