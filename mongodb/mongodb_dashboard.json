@@ -1,0 +1,613 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_MELN5674-MONGODB-COMMUNITY",
+      "label": "meln5674-mongodb-community",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "meln5674-mongodb-community",
+      "pluginName": "mongodb-community"
+    },
+    {
+      "name": "DS_MYSQL",
+      "label": "mysql",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "mysql",
+      "pluginName": "MySQL"
+    }
+  ],
+  "__elements": {},
+  "__requires": [
+    {
+      "type": "panel",
+      "id": "barchart",
+      "name": "Bar chart",
+      "version": ""
+    },
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "10.4.0"
+    },
+    {
+      "type": "datasource",
+      "id": "meln5674-mongodb-community",
+      "name": "mongodb-community",
+      "version": "0.2.0"
+    },
+    {
+      "type": "datasource",
+      "id": "mysql",
+      "name": "MySQL",
+      "version": "1.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "table",
+      "name": "Table",
+      "version": ""
+    }
+  ],
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "type": "meln5674-mongodb-community",
+        "uid": "${DS_MELN5674-MONGODB-COMMUNITY}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "scheme",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 5,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": -100
+      },
+      "targets": [
+        {
+          "aggregation": "[{\"$match\": {\"product.brand\": \"${brand}\"}},\n{\"$group\": {\"_id\": {\"$dayOfYear\": \"$date\"}, \"quantity\": {\"$sum\": \"$quantity\"}, \"date\": {\"$min\": \"$date\"}}},\n{\"$project\":{\"_id\": 0, \"date\": 1, \"quantity\":1}}\n]",
+          "autoTimeBound": false,
+          "autoTimeSort": false,
+          "collection": "Sales",
+          "database": "dw",
+          "datasource": {
+            "type": "meln5674-mongodb-community",
+            "uid": "${DS_MELN5674-MONGODB-COMMUNITY}"
+          },
+          "labelFields": [],
+          "legendFormat": "",
+          "queryType": "Timeseries",
+          "refId": "A",
+          "schemaInference": true,
+          "schemaInferenceDepth": 20,
+          "timestampField": "date",
+          "timestampFormat": "",
+          "valueFieldTypes": [
+            "float64"
+          ],
+          "valueFields": [
+            "measurement"
+          ]
+        }
+      ],
+      "title": "Number of Sales of ${brand}",
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "meln5674-mongodb-community",
+        "uid": "${DS_MELN5674-MONGODB-COMMUNITY}"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "hue",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "dashed"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 776695.4
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": -100
+      },
+      "pluginVersion": "10.4.0",
+      "targets": [
+        {
+          "aggregation": "[{\"$group\": {\"_id\": {\"$dayOfYear\": \"$date\"}, \"unique_customers\": {\"$sum\": \"$unique_customers\"}, \"date\": {\"$min\": \"$date\"}}}, {\"$project\":{\"date\": 1, \"unique_customers\":1}}]",
+          "autoTimeBound": false,
+          "autoTimeSort": false,
+          "collection": "Sales",
+          "database": "dw",
+          "datasource": {
+            "type": "meln5674-mongodb-community",
+            "uid": "${DS_MELN5674-MONGODB-COMMUNITY}"
+          },
+          "hide": false,
+          "labelFields": [],
+          "legendFormat": "",
+          "queryType": "Timeseries",
+          "refId": "A",
+          "schemaInference": false,
+          "schemaInferenceDepth": 20,
+          "timestampField": "date",
+          "timestampFormat": "",
+          "valueFieldTypes": [
+            "int32"
+          ],
+          "valueFields": [
+            "unique_customers"
+          ]
+        }
+      ],
+      "title": "Unique Customers",
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "meln5674-mongodb-community",
+        "uid": "${DS_MELN5674-MONGODB-COMMUNITY}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "id": 4,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "10.4.0",
+      "targets": [
+        {
+          "aggregation": "[{\"$match\": {\"product.brand\": \"${brand}\"}}, \n{\"$group\": {\"_id\": {\"product_id\": \"$product.product_id\"}, \"quantity\": {\"$sum\": \"$quantity\"}, \"unit_price\": {\"$avg\": \"$product.unit_price\"}}}, \n{\"$sort\": {\"quantity\": -1}}, \n{\"$project\":{\"_id\": 1, \"Units Sold\": \"$quantity\", \"Unit Price\": \"$unit_price\"}}\n]",
+          "autoTimeBound": false,
+          "autoTimeSort": false,
+          "collection": "Sales",
+          "database": "dw",
+          "datasource": {
+            "type": "meln5674-mongodb-community",
+            "uid": "${DS_MELN5674-MONGODB-COMMUNITY}"
+          },
+          "labelFields": [
+            "sensorID"
+          ],
+          "legendFormat": "",
+          "queryType": "Table",
+          "refId": "A",
+          "schemaInference": true,
+          "schemaInferenceDepth": 20,
+          "timestampField": "timestamp",
+          "timestampFormat": "",
+          "valueFieldTypes": [
+            "int32",
+            ""
+          ],
+          "valueFields": [
+            "quantity",
+            "product.unit_price"
+          ]
+        }
+      ],
+      "title": "${brand}",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "meln5674-mongodb-community",
+        "uid": "${DS_MELN5674-MONGODB-COMMUNITY}"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "hue",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "dashed"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1407960.9
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "id": 1,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": -100
+      },
+      "pluginVersion": "10.4.0",
+      "targets": [
+        {
+          "aggregation": "[{\"$group\": {\"_id\": {\"$dayOfYear\": \"$date\"}, \"quantity\": {\"$sum\": \"$quantity\"}, \"date\": {\"$min\": \"$date\"}}}, {\"$project\":{\"date\": 1, \"quantity\":1}}]",
+          "autoTimeBound": false,
+          "autoTimeSort": false,
+          "collection": "Sales",
+          "database": "dw",
+          "datasource": {
+            "type": "meln5674-mongodb-community",
+            "uid": "${DS_MELN5674-MONGODB-COMMUNITY}"
+          },
+          "hide": false,
+          "labelFields": [],
+          "legendFormat": "",
+          "queryType": "Timeseries",
+          "refId": "A",
+          "schemaInference": false,
+          "schemaInferenceDepth": 20,
+          "timestampField": "date",
+          "timestampFormat": "",
+          "valueFieldTypes": [
+            "int32"
+          ],
+          "valueFields": [
+            "quantity"
+          ]
+        }
+      ],
+      "title": "Number of Sales",
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "meln5674-mongodb-community",
+        "uid": "${DS_MELN5674-MONGODB-COMMUNITY}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
+      "id": 3,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "10.4.0",
+      "targets": [
+        {
+          "aggregation": "[{\"$group\": {\"_id\": {\"product brand\": \"$product.brand\"}, \"quantity\": {\"$sum\": \"$quantity\"}, \"avg_unit_price\": {\"$avg\": \"$product.unit_price\"}, \"count\": {\"$sum\": 1}}}, {\"$sort\": {\"quantity\": -1}}, {\"$project\":{\"_id\": 1, \"Units Sold\": \"$quantity\", \"Average Unit Price\": \"$avg_unit_price\", \"Number of Products\": \"$count\"}}]",
+          "autoTimeBound": false,
+          "autoTimeSort": false,
+          "collection": "Sales",
+          "database": "dw",
+          "datasource": {
+            "type": "meln5674-mongodb-community",
+            "uid": "${DS_MELN5674-MONGODB-COMMUNITY}"
+          },
+          "labelFields": [
+            "sensorID"
+          ],
+          "legendFormat": "",
+          "queryType": "Table",
+          "refId": "A",
+          "schemaInference": true,
+          "schemaInferenceDepth": 20,
+          "timestampField": "timestamp",
+          "timestampFormat": "",
+          "valueFieldTypes": [
+            "int32",
+            ""
+          ],
+          "valueFields": [
+            "quantity",
+            "product.unit_price"
+          ]
+        }
+      ],
+      "title": "Sales Per Brand",
+      "type": "table"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 39,
+  "tags": [],
+  "templating": {
+    "list": [
+      {
+        "current": {},
+        "datasource": {
+          "type": "mysql",
+          "uid": "${DS_MYSQL}"
+        },
+        "definition": "SELECT dp.brand \nFROM FactSales AS fs\nJOIN DimProducts AS dp ON dp.product_id = fs.product_id\nGROUP BY dp.brand\nORDER BY SUM(fs.quantity) DESC;",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Brand",
+        "multi": false,
+        "name": "brand",
+        "options": [],
+        "query": "SELECT dp.brand \nFROM FactSales AS fs\nJOIN DimProducts AS dp ON dp.product_id = fs.product_id\nGROUP BY dp.brand\nORDER BY SUM(fs.quantity) DESC;",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "2019-11-01T00:00:00.000Z",
+    "to": "2019-11-30T00:00:00.000Z"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "MongoDB",
+  "uid": "ddi4iz466r1tsc",
+  "version": 46,
+  "weekStart": ""
+}
