@@ -1,22 +1,23 @@
-version: '3.1'
+version: '3.0'
 
 services:
   mysql:
     image: mysql:latest
-    restart: always
+    container_name: mysql
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     volumes:
-      - mysql_data:/var/lib/mysql
+      - ./mysql_data:/var/lib/mysql
     ports:
       - "3306:3306"
+    restart: unless-stopped
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
-    restart: always
+    container_name: phpmyadmin
     environment:
       PMA_HOST: ${PMA_HOST}
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
@@ -24,6 +25,4 @@ services:
       - "8080:80"
     depends_on:
       - mysql
-
-volumes:
-  mysql_data:
+    restart: unless-stopped
