@@ -1,6 +1,6 @@
 import argparse
 from config import get_mysql_connection, get_neo4j_connection
-from db_operations import fetch_data_from_mysql, preprocess_categories, process_chunk, create_indexes
+from graph_operations import fetch_data_from_mysql, preprocess_categories, process_chunk, create_indexes
 
 def main(uri, user, password, limit):
     mysql_cnx = get_mysql_connection()
