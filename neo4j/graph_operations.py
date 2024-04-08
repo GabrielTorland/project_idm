@@ -90,8 +90,8 @@ def process_chunk(data, neo4j_conn, chunk_size=10000):
         neo4j_conn.query("""
         UNWIND $sales_operations_data AS sale_data
         MERGE (year:Year {name: sale_data.year})
-        MERGE (month:Month {name: sale_data.month})-[:IN]->(year)
-        MERGE (day:Day {name: sale_data.day})-[:IN]->(month)
+        MERGE (year)-[:HAS_MONTH]->(month:Month {name: sale_data.month})
+        MERGE (month)-[:HAS_DAY]->(day:Day {name: sale_data.day})
 
         MERGE (brand:Brand {name: sale_data.brand_name})
         MERGE (category:Category {name: sale_data.leaf_category})
