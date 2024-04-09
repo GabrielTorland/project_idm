@@ -1,10 +1,11 @@
 import argparse
 from config import get_mysql_connection, get_neo4j_connection
 from graph_operations import fetch_data_from_mysql, preprocess_categories, process_chunk, create_indexes
+import os
 
-def main(uri, user, password, limit):
+def main(limit):
     mysql_cnx = get_mysql_connection()
-    neo4j_conn = get_neo4j_connection(uri, user, password)
+    neo4j_conn = get_neo4j_connection()
 
     try:
         create_indexes(neo4j_conn)
@@ -17,11 +18,9 @@ def main(uri, user, password, limit):
         neo4j_conn.close()
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Migrate data to Neo4j database.")
-    parser.add_argument("--uri", default="bolt://localhost:7687")
-    parser.add_argument("--user", default="neo4j")
-    parser.add_argument("--password", default="Password123")
+    parser = argparse.ArgumentParser(description="Migrate data to Neo4j.")
     parser.add_argument("--limit", type=int)
     args = parser.parse_args()
+    main(args.limit)
 
-    main(args.uri, args.user, args.password, args.limit)
+
