@@ -544,7 +544,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT dp.brand, SUM(fs.quantity) AS \"Units Sold\", AVG(fs.unit_price) AS \"Average Unit Price\", COUNT(*) AS \"Number of Products\"\nFROM dw.FactSales AS fs\nJOIN dw.DimProducts AS dp ON dp.product_id = fs.product_id\nGROUP BY dp.brand\nORDER BY SUM(fs.quantity) DESC;",
+          "rawSql": "SELECT bss.brand, bss.units_sold  AS \"Units Sold\", bss.average_unit_price AS \"Average Unit Price\", bss.number_of_products AS \"Number of Products\"\nFROM dw.BrandSalesSummary AS bss\nORDER BY bss.units_sold DESC;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -604,6 +604,6 @@
   "timezone": "browser",
   "title": "MySQL",
   "uid": "ddi268f74cq9sa",
-  "version": 11,
+  "version": 13,
   "weekStart": ""
 }
