@@ -70,7 +70,9 @@ def process_chunk(data, neo4j_conn, chunk_size=10000):
             sale_date = sale['sale_time'] if isinstance(sale['sale_time'], date) else datetime.strptime(
                 sale['sale_time'], "%Y-%m-%d").date()
 
-            year, month, day = sale_date.year, sale_date.month, sale_date.day
+            year = str(sale_date.year)
+            month = str(sale_date.month).zfill(2)
+            day = str(sale_date.day).zfill(2)
             leaf_category = sale.get('category_code', 'unknown').split('.')[-1] if sale.get(
                 'category_code') else 'unknown'
 
