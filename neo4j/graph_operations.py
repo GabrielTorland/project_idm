@@ -113,8 +113,7 @@ def create_indexes(neo4j_conn):
     indexes = [
         "CREATE INDEX IF NOT EXISTS FOR (p:Product) ON (p.product_id)",
         "CREATE INDEX IF NOT EXISTS FOR (c:Category) ON (c.name)",
-        "CREATE INDEX IF NOT EXISTS FOR (b:Brand) ON (b.name)",
-        "CREATE INDEX IF NOT EXISTS FOR (s:Sale) ON (s.time)"
+        "CREATE INDEX IF NOT EXISTS FOR (b:Brand) ON (b.name)"
     ]
     for index in indexes:
         neo4j_conn.query(index, {})
