@@ -109,6 +109,7 @@ def process_chunk(data, neo4j_conn, chunk_size=10000):
 def create_indexes(neo4j_conn):
     start_time = time.time()
     neo4j_conn.query("CREATE INDEX IF NOT EXISTS FOR (b:Brand) ON (b.name)")
+    neo4j_conn.query("CREATE INDEX IF NOT EXISTS FOR (p:Product) ON (p.product_id)")
     neo4j_conn.query("CREATE INDEX IF NOT EXISTS FOR ()-[r:MADE_SALE]-() ON (r.date)")
 
     end_time = time.time()
