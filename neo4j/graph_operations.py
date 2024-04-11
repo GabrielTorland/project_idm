@@ -1,4 +1,6 @@
 from datetime import datetime, date
+from decimal import Decimal
+
 from tqdm import tqdm
 import time
 
@@ -62,49 +64,43 @@ def preprocess_categories(data, neo4j_conn):
 def process_chunk(data, neo4j_conn, chunk_size=10000):
     start_time = time.time()
 
+    event_type = "sale"
+    neo4j_conn.query("""
+    MERGE (event:Event {event: $Event})
+    """, {'Event': event_type})
+
     for i in tqdm(range(0, len(data), chunk_size), desc="Chunk processing"):
         chunk_data = data[i:i + chunk_size]
 
-        sales_operations_data = []
         for sale in chunk_data:
+            unit_price = float(sale['unit_price']) if isinstance(sale['unit_price'], Decimal) else sale['unit_price']
             sale_date = sale['sale_time'] if isinstance(sale['sale_time'], date) else datetime.strptime(
-                sale['sale_time'], "%Y-%m-%d").date()
+                sale['sale_time'], "%Y-%m-%d").date().isoformat()
+            category_hierarchy = sale['category_code'].split('.') if sale['category_code'] else ['unknown']
+            leaf_category = category_hierarchy[-1]
 
-            year = str(sale_date.year)
-            month = str(sale_date.month).zfill(2)
-            day = str(sale_date.day).zfill(2)
-            leaf_category = sale.get('category_code', 'unknown').split('.')[-1] if sale.get(
-                'category_code') else 'unknown'
-
-            sales_operations_data.append({
-                'year': year,
-                'month': month,
-                'day': day,
+            sale_data = {
+                'event_type': event_type,
                 'product_id': sale['product_id'],
                 'brand_name': sale.get('brand', 'unknown'),
                 'leaf_category': leaf_category,
                 'quantity': sale['quantity'],
-                'unit_price': str(sale['unit_price']),
+                'unit_price': unit_price,
                 'unique_customers': sale.get('unique_customers', 0),
-                'sale_time': sale_date.isoformat()
-            })
+                'date': sale_date
+            }
 
-        neo4j_conn.query("""
-        UNWIND $sales_operations_data AS sale_data
-        MERGE (year:Year {name: sale_data.year})
-        MERGE (year)-[:HAS_MONTH]->(month:Month {name: sale_data.month})
-        MERGE (month)-[:HAS_DAY]->(day:Day {name: sale_data.day})
-
-        MERGE (brand:Brand {name: sale_data.brand_name})
-        MERGE (category:Category {name: sale_data.leaf_category})
-        MERGE (product:Product {product_id: sale_data.product_id})
-
-        MERGE (brand)-[:CATEGORIZED_AS]->(category)
-
-        MERGE (product)-[:BRANDED_AS]->(brand)
-        MERGE (product)-[:BELONGS_TO]->(category)
-        MERGE (product)-[:MADE_SALE {Quantity: sale_data.quantity, Unit_price: sale_data.unit_price, Unique_customers: sale_data.unique_customers}]->(day)
-        """, {'sales_operations_data': sales_operations_data})
+            neo4j_conn.query("""
+            MERGE (product:Product {product_id: $product_id})
+            MERGE (category:Category {name: $leaf_category})
+            MERGE (product)-[:BELONGS_TO]->(category)
+            MERGE (brand:Brand {name: $brand_name})
+            MERGE (brand)-[:HAS_PRODUCT]->(product)
+            WITH product
+            MATCH (event:Event {event: $event_type})
+            CREATE (product)-[r:MADE_SALE]->(event)
+            SET r.date = $date, r.quantity = $quantity, r.unit_price = $unit_price, r.unique_customers = $unique_customers
+            """, sale_data)
 
     end_time = time.time()
     print(f"Time to process chunk: {end_time - start_time} seconds")
@@ -112,15 +108,8 @@ def process_chunk(data, neo4j_conn, chunk_size=10000):
 
 def create_indexes(neo4j_conn):
     start_time = time.time()
-    indexes = [
-        "CREATE INDEX IF NOT EXISTS FOR (p:Product) ON (p.product_id)",
-        "CREATE INDEX IF NOT EXISTS FOR (c:Category) ON (c.name)",
-        "CREATE INDEX IF NOT EXISTS FOR (b:Brand) ON (b.name)",
-        "CREATE INDEX IF NOT EXISTS FOR (y:Year) ON (y.name)",
-        "CREATE INDEX IF NOT EXISTS FOR (m:Month) ON (m.name)",
-        "CREATE INDEX IF NOT EXISTS FOR (d:Day) ON (d.name)"
-    ]
-    for index in indexes:
-        neo4j_conn.query(index, {})
+    neo4j_conn.query("CREATE INDEX IF NOT EXISTS FOR (b:Brand) ON (b.name)")
+    neo4j_conn.query("CREATE INDEX IF NOT EXISTS FOR ()-[r:MADE_SALE]-() ON (r.date)")
+
     end_time = time.time()
     print(f"Time to create indexes: {end_time - start_time} seconds")

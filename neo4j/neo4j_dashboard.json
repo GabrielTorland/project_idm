@@ -1,4 +1,41 @@
 {
+  "__inputs": [
+    {
+      "name": "DS_KNIEPDENNIS-NEO4J-DATASOURCE",
+      "label": "kniepdennis-neo4j-datasource",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "kniepdennis-neo4j-datasource",
+      "pluginName": "Neo4j Datasource"
+    }
+  ],
+  "__elements": {},
+  "__requires": [
+    {
+      "type": "panel",
+      "id": "barchart",
+      "name": "Bar chart",
+      "version": ""
+    },
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "10.4.1"
+    },
+    {
+      "type": "datasource",
+      "id": "kniepdennis-neo4j-datasource",
+      "name": "Neo4j Datasource",
+      "version": "1.3.1"
+    },
+    {
+      "type": "panel",
+      "id": "table",
+      "name": "Table",
+      "version": ""
+    }
+  ],
   "annotations": {
     "list": [
       {
@@ -18,13 +55,13 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 9,
+  "id": null,
   "links": [],
   "panels": [
     {
       "datasource": {
         "type": "kniepdennis-neo4j-datasource",
-        "uid": "bdi7x5usyj1fkb"
+        "uid": "${DS_KNIEPDENNIS-NEO4J-DATASOURCE}"
       },
       "fieldConfig": {
         "defaults": {
@@ -70,7 +107,7 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 9,
+        "h": 10,
         "w": 12,
         "x": 0,
         "y": 0
@@ -79,96 +116,7 @@
       "options": {
         "barRadius": 0,
         "barWidth": 0.6,
-        "fullHighlight": false,
-        "groupWidth": 0.7,
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "orientation": "auto",
-        "showValue": "auto",
-        "stacking": "none",
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        },
-        "xTickLabelRotation": 0,
-        "xTickLabelSpacing": 0
-      },
-      "pluginVersion": "10.4.1",
-      "targets": [
-        {
-          "cypherQuery": "MATCH (brand:Brand {name: \"${brand}\"})<-[:BRANDED_AS]-(product:Product)-[sale:MADE_SALE]->(day:Day)<-[:HAS_DAY]-(month:Month)<-[:HAS_MONTH]-(year:Year)\r\nWITH year, month, day, SUM(sale.Quantity) AS TotalQuantity\r\nORDER BY year.name, month.name, day.name\r\nRETURN toString(month.name) + '-' + toString(day.name) AS date, TotalQuantity",
-          "datasource": {
-            "type": "kniepdennis-neo4j-datasource",
-            "uid": "bdi7x5usyj1fkb"
-          },
-          "refId": "A"
-        }
-      ],
-      "title": "Number of Sales of ${brand}",
-      "type": "barchart"
-    },
-    {
-      "datasource": {
-        "type": "kniepdennis-neo4j-datasource",
-        "uid": "bdi7x5usyj1fkb"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "continuous-GrYlRd"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "fillOpacity": 80,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineWidth": 1,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 9,
-        "w": 11,
-        "x": 12,
-        "y": 0
-      },
-      "id": 6,
-      "options": {
-        "barRadius": 0,
-        "barWidth": 0.9,
+        "colorByField": "TotalQuantity",
         "fullHighlight": false,
         "groupWidth": 0.7,
         "legend": {
@@ -186,14 +134,106 @@
         },
         "xField": "date",
         "xTickLabelRotation": 0,
-        "xTickLabelSpacing": 0
+        "xTickLabelSpacing": 100
+      },
+      "pluginVersion": "10.4.1",
+      "targets": [
+        {
+          "cypherQuery": "MATCH (brand:Brand {name: \"$brand\"})-[:HAS_PRODUCT]->(product:Product)-[sale:MADE_SALE]->(:Event)\r\nWITH date(sale.date) AS SaleDate, SUM(sale.quantity) AS TotalQuantity\r\nORDER BY SaleDate\r\nRETURN toString(SaleDate.month) + '/' + toString(SaleDate.day) AS date, TotalQuantity\r\n",
+          "datasource": {
+            "type": "kniepdennis-neo4j-datasource",
+            "uid": "${DS_KNIEPDENNIS-NEO4J-DATASOURCE}"
+          },
+          "refId": "A"
+        }
+      ],
+      "title": "Number of Sales of ${brand}",
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "kniepdennis-neo4j-datasource",
+        "uid": "${DS_KNIEPDENNIS-NEO4J-DATASOURCE}"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "continuous-GrYlRd"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "dashed"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 776695.4
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 10,
+        "x": 12,
+        "y": 0
+      },
+      "id": 6,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "xField": "date",
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 100
       },
       "targets": [
         {
-          "cypherQuery": "MATCH (year:Year)-[:HAS_MONTH]->(month:Month)-[:HAS_DAY]->(day:Day)<-[sale:MADE_SALE]-(product:Product)\r\nWITH year.name AS Year, month.name AS Month, day.name AS Day, SUM(sale.Unique_customers) AS TotalUniqueCustomers\r\nORDER BY Year, Month, Day\r\nRETURN TotalUniqueCustomers, toString(Month) + '-' + toString(Day) AS date\r\n",
+          "cypherQuery": "MATCH (product:Product)-[sale:MADE_SALE]->()\r\nWITH date(sale.date) AS SaleDate, SUM(sale.unique_customers) AS TotalUniqueCustomers\r\nORDER BY SaleDate\r\nRETURN TotalUniqueCustomers, toString(SaleDate.month) + '-' + toString(SaleDate.day) AS date\r\n",
           "datasource": {
             "type": "kniepdennis-neo4j-datasource",
-            "uid": "bdi7x5usyj1fkb"
+            "uid": "${DS_KNIEPDENNIS-NEO4J-DATASOURCE}"
           },
           "refId": "A"
         }
@@ -204,7 +244,7 @@
     {
       "datasource": {
         "type": "kniepdennis-neo4j-datasource",
-        "uid": "bdi7x5usyj1fkb"
+        "uid": "${DS_KNIEPDENNIS-NEO4J-DATASOURCE}"
       },
       "fieldConfig": {
         "defaults": {
@@ -237,10 +277,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 7,
+        "h": 8,
         "w": 12,
         "x": 0,
-        "y": 9
+        "y": 10
       },
       "id": 1,
       "options": {
@@ -258,10 +298,10 @@
       "pluginVersion": "10.4.1",
       "targets": [
         {
-          "cypherQuery": "MATCH (brand:Brand {name: \"${brand}\"})<-[:BRANDED_AS]-(product:Product)-[sale:MADE_SALE]->()\r\nRETURN product.product_id AS ProductID, sale.Quantity AS Units_Sold, sale.Unit_price AS Unit_Price\r\nORDER BY sale.Quantity DESC\r\n",
+          "cypherQuery": "MATCH (brand:Brand {name: \"$brand\"})-[:HAS_PRODUCT]->(product:Product)-[sale:MADE_SALE]->()\r\nRETURN product.product_id AS ProductID, sale.quantity AS Units_Sold, sale.unit_price AS Unit_Price\r\nORDER BY sale.quantity DESC\r\n",
           "datasource": {
             "type": "kniepdennis-neo4j-datasource",
-            "uid": "bdi7x5usyj1fkb"
+            "uid": "${DS_KNIEPDENNIS-NEO4J-DATASOURCE}"
           },
           "refId": "A"
         }
@@ -272,7 +312,7 @@
     {
       "datasource": {
         "type": "kniepdennis-neo4j-datasource",
-        "uid": "bdi7x5usyj1fkb"
+        "uid": "${DS_KNIEPDENNIS-NEO4J-DATASOURCE}"
       },
       "fieldConfig": {
         "defaults": {
@@ -297,7 +337,7 @@
               "type": "linear"
             },
             "thresholdsStyle": {
-              "mode": "off"
+              "mode": "dashed"
             }
           },
           "mappings": [],
@@ -310,7 +350,7 @@
               },
               {
                 "color": "red",
-                "value": 80
+                "value": 1407960.9
               }
             ]
           }
@@ -318,15 +358,15 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 7,
-        "w": 11,
+        "h": 8,
+        "w": 10,
         "x": 12,
-        "y": 9
+        "y": 10
       },
       "id": 5,
       "options": {
         "barRadius": 0,
-        "barWidth": 0.9,
+        "barWidth": 0.97,
         "fullHighlight": false,
         "groupWidth": 0.7,
         "legend": {
@@ -348,10 +388,10 @@
       },
       "targets": [
         {
-          "cypherQuery": "MATCH (product:Product)-[sale:MADE_SALE]->(day:Day)<-[:HAS_DAY]-(month:Month)<-[:HAS_MONTH]-(year:Year)\r\nWITH toString(month.name) + \"-\" + toString(day.name) AS SaleDate, SUM(sale.Quantity) AS TotalQuantity\r\nORDER BY SaleDate\r\nRETURN SaleDate, TotalQuantity\r\n",
+          "cypherQuery": "MATCH (product:Product)-[sale:MADE_SALE]->()\r\nWITH date(sale.date) AS SaleDate, SUM(sale.quantity) AS TotalQuantity\r\nORDER BY SaleDate\r\nRETURN toString(SaleDate.month) + \"/\" + toString(SaleDate.day) AS SaleDate, TotalQuantity\r\n",
           "datasource": {
             "type": "kniepdennis-neo4j-datasource",
-            "uid": "bdi7x5usyj1fkb"
+            "uid": "${DS_KNIEPDENNIS-NEO4J-DATASOURCE}"
           },
           "refId": "A"
         }
@@ -362,7 +402,7 @@
     {
       "datasource": {
         "type": "kniepdennis-neo4j-datasource",
-        "uid": "bdi7x5usyj1fkb"
+        "uid": "${DS_KNIEPDENNIS-NEO4J-DATASOURCE}"
       },
       "fieldConfig": {
         "defaults": {
@@ -397,7 +437,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 16
+        "y": 18
       },
       "id": 3,
       "options": {
@@ -415,10 +455,11 @@
       "pluginVersion": "10.4.1",
       "targets": [
         {
-          "cypherQuery": "MATCH (brand:Brand)<-[:BRANDED_AS]-(product:Product)-[sale:MADE_SALE]->()\r\nWITH brand.name AS Brand, \r\n     SUM(sale.Quantity) AS Units_Sold, \r\n     AVG(toFloat(sale.Unit_price)) AS Average_Unit_Price, \r\n     COUNT(sale) AS SalesTransactions\r\nRETURN Brand, Units_Sold, Average_Unit_Price, SalesTransactions\r\nORDER BY Units_Sold DESC\r\n",
+          "Format": "table",
+          "cypherQuery": "MATCH (brand:Brand)-[:HAS_PRODUCT]->(product:Product)-[sale:MADE_SALE]->()\r\nWITH brand.name AS Brand, \r\n     SUM(sale.quantity) AS Units_Sold, \r\n     AVG(toFloat(sale.unit_price)) AS Average_Unit_Price, \r\n     COUNT(sale) AS SalesTransactions\r\nRETURN Brand, Units_Sold, Average_Unit_Price, SalesTransactions\r\nORDER BY Units_Sold DESC\r\n",
           "datasource": {
             "type": "kniepdennis-neo4j-datasource",
-            "uid": "bdi7x5usyj1fkb"
+            "uid": "${DS_KNIEPDENNIS-NEO4J-DATASOURCE}"
           },
           "refId": "A"
         }
@@ -432,16 +473,12 @@
   "templating": {
     "list": [
       {
-        "current": {
-          "selected": false,
-          "text": "samsung",
-          "value": "samsung"
-        },
+        "current": {},
         "datasource": {
           "type": "kniepdennis-neo4j-datasource",
-          "uid": "bdi7x5usyj1fkb"
+          "uid": "${DS_KNIEPDENNIS-NEO4J-DATASOURCE}"
         },
-        "definition": "MATCH (brand:Brand)<-[:BRANDED_AS]-(product:Product)-[sale:MADE_SALE]->(day:Day)<-[:HAS_DAY]-(month:Month)<-[:HAS_MONTH]-(year:Year)\nWITH brand\nRETURN brand.name AS Brand",
+        "definition": "MATCH (brand:Brand)\nWITH brand\nRETURN brand.name AS Brand",
         "hide": 0,
         "includeAll": false,
         "label": "Brand",
@@ -449,7 +486,7 @@
         "name": "brand",
         "options": [],
         "query": {
-          "cypherQuery": "MATCH (brand:Brand)<-[:BRANDED_AS]-(product:Product)-[sale:MADE_SALE]->(day:Day)<-[:HAS_DAY]-(month:Month)<-[:HAS_MONTH]-(year:Year)\nWITH brand\nRETURN brand.name AS Brand"
+          "cypherQuery": "MATCH (brand:Brand)\nWITH brand\nRETURN brand.name AS Brand"
         },
         "refresh": 1,
         "regex": "",
