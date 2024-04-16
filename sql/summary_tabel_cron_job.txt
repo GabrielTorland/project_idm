@@ -1,0 +1,2 @@
+0 1 * * * /usr/bin/python3 /your/path/sync_summary_tables.py
+
