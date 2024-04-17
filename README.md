@@ -121,7 +121,7 @@ python3 migrate_to_mongodb.py
 
 After its done loading, add the MongoDB dashboard to grafana using the JSON file in the MongoDB folder.
 
-### Grafana (include import)
+### Grafana
 
 Navigate to the Grafana folder:
 
