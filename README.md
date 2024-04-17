@@ -28,6 +28,11 @@ Create a virtual environment and install the required dependencies:
 pip install -r requirements.txt
 ```
 
+Start MySQL server and phpMyAdmin:
+```sh
+docker-compose up -d
+```
+
 Initialize the database schema:
 
 ```sh
