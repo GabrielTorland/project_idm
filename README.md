@@ -135,5 +135,4 @@ Start the Grafana interface server:
 docker compose up -d
 ```
 
-To add the dashboards, first create a data source and then import the dashboard files, located in the respective dirs.
-
+Now, if you have followed the previous steps, you should be able to create the dashboards. Start by creating the data sources for each DW. Then, import the dashboard files from their respective dirs.
