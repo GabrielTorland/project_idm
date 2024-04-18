@@ -66,8 +66,73 @@ python3 sync_summary_table.py
 
 ### Neo4J DW
 
+Navigate to the Neo4j Folder:
+
+```sh
+cd neo4j
+```
+
+Install the required dependencies:
+
+```sh
+pip install --no-cache-dir -r requirements.txt
+```
+
+Start the neo4j server:
+
+```sh
+docker compose up -d
+```
+
+Run the following script to migrate the DW to neo4j:
+
+```sh
+python3 sync_neo4j_with_dw.py
+```
+
+This will take some time. After its complete, add the neo4j dashboard to grafana using the JSON file in the Neo4j folder.
+
 
 ### MongoDB DW
 
-### Grafana (include import)
+Navigate to the MongoDB Folder:
 
+```sh
+cd mongodb
+```
+
+Install the required dependencies:
+
+```sh
+pip install -r requirements.txt
+```
+
+Start the MongoDB server:
+
+```sh
+docker compose up -d
+```
+
+Migrate the DW to MongoDB using this script:
+
+```sh
+python3 migrate_to_mongodb.py
+```
+
+After its done loading, add the MongoDB dashboard to grafana using the JSON file in the MongoDB folder.
+
+### Grafana
+
+Navigate to the Grafana folder:
+
+```sh
+cd grafana
+```
+
+Start the Grafana interface server:
+
+```sh
+docker compose up -d
+```
+
+Now, if you have followed the previous steps, you should be able to create the dashboards. Start by creating the data sources for each DW. Then, import the dashboard files from their respective dirs.
