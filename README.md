@@ -136,3 +136,6 @@ docker compose up -d
 ```
 
 Now, if you have followed the previous steps, you should be able to create the dashboards. Start by creating the data sources for each DW. Then, import the dashboard files from their respective dirs.
+
+<img width="1128" alt="image" src="https://github.com/GabrielTorland/project_idm/assets/80287447/d8f55105-329e-4751-b29d-beaf77ab14c8">
+
