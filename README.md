@@ -1,4 +1,4 @@
-# I am a good title  
+# Implementing and Analyzing Multi-Data Warehouse Architectures for Enhanced E-Commerce Analytics  
 
 In today's data-driven world, the ability to make informed decisions swiftly based on real-time data is crucial. However, ODB systems may struggle with this due to their sheer volume. As a solution, DW are employed for focused analytical tasks. A DW can be any form of database, typically selected based on specific data needs. Furthermore, data warehouses often include a front-end interface that provides visualizations for better data interpretation. In this project, we will implement three distinct DW for an E-Commerce dataset: one based on SQL and the other two on NoSQL. A unified front-end will serve all three DW. The objective is to evaluate the advantages and disadvantages of each system in handling specific analytical tasks.
 
